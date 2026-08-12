@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const mongoose = require("mongoose");
 const Listing = require("../models/listing");
 
@@ -11,7 +15,7 @@ main()
   .catch(console.log);
 
 async function main() {
-  await mongoose.connect(MONGO_URL);
+  await mongoose.connect(dbURL);
 }
 
 async function updateCoordinates() {
@@ -20,14 +24,19 @@ async function updateCoordinates() {
   for (const listing of listings) {
 
     // Skip listings that already have coordinates
-    if (
-      listing.geometry &&
-      listing.geometry.coordinates &&
-      listing.geometry.coordinates.length === 2
+    const DEFAULT_COORDS = [77.209, 28.6139];
+
+   // Skip only if listing has real (non-default) coordinates
+   if (
+     listing.geometry &&
+     listing.geometry.coordinates &&
+     listing.geometry.coordinates.length === 2 &&
+     !(listing.geometry.coordinates[0] === DEFAULT_COORDS[0] &&
+     listing.geometry.coordinates[1] === DEFAULT_COORDS[1])
     ) {
-      console.log(`${listing.title} already has coordinates`);
-      continue;
-    }
+  console.log(`${listing.title} already has coordinates`);
+  continue;
+}
 
     try {
       const location = `${listing.location}, ${listing.country}`;
